@@ -23,15 +23,15 @@
                 } else {
                     current_page_num = current_page_num + 1;
                     if (current_page_num == 1) {
-                        return "http://www.hroot.com/channels/5.html"
+                        return "http://www.hroot.com/channels/4.html"
                     } else {
-                        return "http://www.hroot.com/channels/5_" + current_page_num + ".html"
+                        return "http://www.hroot.com/channels/4_" + current_page_num + ".html"
                     }
                 }
             }, "has_next": function () {
                 return current_page_num < page_num;
             }
-        }
+        };
         return self;
     };
     /**
@@ -46,14 +46,41 @@
         return page_num;
     };
     /**
+     * 保存文章
+     * @param url
+     * @param save_func
+     */
+    var get_content_and_save = function (url, save_func) {
+        $.get(url, function (data) {
+            var jq_data = $(data);
+            var title = jq_data.find('table.right-tit td:first').text();
+            var body = jq_data.find('#OutInfo').html();
+            save_func({"title": title, "body": body});
+        });
+    };
+    var queue = (function () {
+        var arr = [];
+        var self = {
+            'push': function (ele) {
+                arr.push(ele);
+            }, 'pop': function () {
+                return arr.pop();
+            }, 'has_el': function () {
+                return arr.length > 0;
+            }
+        };
+        return self;
+
+    })();
+    /**
      * 得到文档列表
      * @param url
      * @param nav
      */
-    var list_links = function () {
+    var list_links = function (save_func) {
         var nav = null;
         $.ajax({
-            "url": "http://www.hroot.com/channels/5.html",
+            "url": "http://www.hroot.com/channels/4.html",
             "method": "GET",
             "async": false,
             "success": function (data) {
@@ -72,11 +99,73 @@
                     return {"href": link.href}
                 });
                 _.each(data, function (d) {
-                    console.log(d.href);
+                    queue.push(d.href);
                 })
             });
         }
+    };
+    setTimeout(function () {
+        setInterval(function () {
+            if (queue.has_el()) {
+                var url = queue.pop();
+                console.log(url);
+                get_content_and_save(url, save_article);
+            }
+        }, 500);
 
+    }, 10 * 1000);
+
+
+    /**
+     * save_article({'title':'title','body':'body'})
+     * @param opts
+     */
+    var save_article = function (opts) {
+        var data = {
+            "channelid": 1,
+            "dopost": "save",
+            "title": opts.title,
+            "shorttitle": "",
+            "redirecturl": "",
+            "tags": "",
+            "weight": "9",
+            "picname": "",
+            "source": "Hroot",
+            "writer": "",
+            "typeid": "12",
+            "typeid2": "",
+            "keywords": "",
+            "autokey": "1",
+            "description": "",
+            "remote": "1",
+            "autolitpic": "1",
+            "needwatermark": "1",
+            "sptype": "hand",
+            "spsize": "5",
+            'body': opts.body,
+            'voteid': '',
+            'notpost': '0',
+            'click': '123',//TODO 随机
+            'sortup': '0',
+            'color': '',
+            'arcrank': '0',
+            'money': '0',
+            'pubdate': '2016-04-23 17:51:32',//TODO 时间
+            'ishtml': '0',
+            'filename': '',
+            'templet': '',
+            'imageField.x': '42',
+            'imageField.y': '9',
+            'flags': ['c', 'a']
+        };
+        $.ajax({
+            'url': config.save_url(),
+            'data': data,
+            'method': "POST",
+            'success': function (data) {
+
+            }
+        });
     };
     list_links();
 })();
