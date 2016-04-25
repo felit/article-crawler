@@ -8,4 +8,4 @@
         }
     };
     win.config = Config;
-})(win);
+})(window);
