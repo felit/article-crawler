@@ -4,8 +4,8 @@
 (function (win) {
     var config = {
         'save_url': function () {
-            return 'http://localhost/dede/article_add.php';
+            return 'http://www.livedrof.com/dede/article_add.php';
         }
     };
-    win.config = Config;
+    win.config = config;
 })(window);
